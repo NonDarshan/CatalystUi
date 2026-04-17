@@ -32,14 +32,10 @@ sudo apt-get install -y --no-install-recommends \
   xz-utils \
   zip
 
-# Build TopJohnWu samloader from source (Rust) for speed and consistency.
+# Build TopJohnWu samloader natively from the Rust registry for speed and consistency.
 if [[ ! -x "${TOOL_DIR}/bin/samloader" ]]; then
-  git clone --depth=1 https://github.com/topjohnwu/samloader.git "${TOOL_DIR}/samloader-src"
-  pushd "${TOOL_DIR}/samloader-src" >/dev/null
-  cargo build --release
-  popd >/dev/null
-  mkdir -p "${TOOL_DIR}/bin"
-  cp "${TOOL_DIR}/samloader-src/target/release/samloader" "${TOOL_DIR}/bin/samloader"
+  echo "📥 Compiling Rust samloader..."
+  cargo install samloader --root "${TOOL_DIR}"
 fi
 
 # Build lpmake/lpdump natively (do not rely on mirrors).
