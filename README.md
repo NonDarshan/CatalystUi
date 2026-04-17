@@ -24,23 +24,6 @@ This repository contains an automated GitHub Actions pipeline to build a **TWRP-
 - **Live blur / high-end animation toggles**: properties are set in CatalystUi feature config for easy hook-in with UI mods.
 - **Custom wallpaper folder**: place your image in `custom_wallpapers/`; first file is packed as default wallpaper.
 
-
-## Dependency setup
-
-The workflow now installs dependencies through `scripts/setup_dependencies.sh` to ensure all required tooling exists before build starts.
-
-Installed tools include (non-exhaustive):
-- `p7zip-full` or `7zip` (`7z`/`7zz`)
-- `lz4`, `simg2img`, `debugfs`/`e2fsprogs`
-- `android-sdk-libsparse-utils`
-- `python3`, `pip`, `samloader`
-
-If running locally, execute:
-
-```bash
-scripts/setup_dependencies.sh
-```
-
 ## Important notes
 
 - This is a build framework and patch set, not a guarantee every requested flagship feature is natively supported on all A14 hardware.

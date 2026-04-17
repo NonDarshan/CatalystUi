@@ -32,26 +32,19 @@ package_available() {
   apt-cache show "$pkg" >/dev/null 2>&1
 }
 
-install_package_best_effort() {
-  local pkg="$1"
-  if package_available "$pkg"; then
-    ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg" && return 0
-  fi
-  return 1
-}
-
 install_first_available() {
   local installed=0
   for pkg in "$@"; do
-    echo "[deps] Trying package candidate: $pkg"
-    if install_package_best_effort "$pkg"; then
+    if package_available "$pkg"; then
+      echo "[deps] Installing package candidate: $pkg"
+      ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg"
       installed=1
       break
     fi
   done
 
   if [[ "$installed" -ne 1 ]]; then
-    echo "[deps] None of the package candidates installed successfully: $*" >&2
+    echo "[deps] None of the package candidates are available: $*" >&2
     return 1
   fi
 }
@@ -59,23 +52,16 @@ install_first_available() {
 echo "[deps] Updating apt indexes"
 ${SUDO} apt-get update -y
 
-# Ensure optional Ubuntu component is enabled when available.
-${SUDO} add-apt-repository -y universe >/dev/null 2>&1 || true
-${SUDO} apt-get update -y
-
 echo "[deps] Installing base apt packages"
-for pkg in "${BASE_PACKAGES[@]}"; do
-  if ! install_package_best_effort "$pkg"; then
-    echo "[deps] Failed to install required package: $pkg" >&2
-    exit 1
-  fi
-done
+${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${BASE_PACKAGES[@]}"
 
 # 7z package naming differs across runners/distros. Try candidates in order.
-install_first_available p7zip-full 7zip 7zip-standalone
+install_first_available p7zip-full 7zip
 
 # Optional codecs package might not exist on some mirrors; ignore failures.
-install_package_best_effort p7zip-rar || true
+if package_available p7zip-rar; then
+  ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends p7zip-rar || true
+fi
 
 if ! command -v 7z >/dev/null 2>&1 && command -v 7zz >/dev/null 2>&1; then
   echo "[deps] Creating 7z shim from 7zz"
