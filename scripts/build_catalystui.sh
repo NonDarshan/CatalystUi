@@ -69,44 +69,13 @@ log() {
   printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
 }
 
-require_toolchain() {
-  local missing=0
-  for tool in curl file tar unzip lz4 simg2img debugfs python3; do
-    if ! command -v "${tool}" >/dev/null 2>&1; then
-      echo "Missing required tool: ${tool}" >&2
-      missing=1
-    fi
-  done
-
-  if [[ "${FIRMWARE_SOURCE}" == "samloader" ]] && ! command -v samloader >/dev/null 2>&1; then
-    echo "Missing required tool for samloader mode: samloader" >&2
-    missing=1
-  fi
-
-  if [[ "${missing}" -ne 0 ]]; then
-    echo "Install dependencies first (run scripts/setup_dependencies.sh)." >&2
-    exit 1
-  fi
-}
-
 extract_firmware_archive() {
   local archive="$1"
   local file_type
   file_type="$(file -b "${archive}")"
 
-  if [[ "${file_type}" == *"Zip archive"* ]]; then
-    unzip -o "${archive}" -d "${FIRMWARE_DIR}" >"${LOG_DIR}/extract_firmware.log"
-  elif [[ "${file_type}" == *"7-zip archive"* ]]; then
-    python3 - <<PY7Z >"${LOG_DIR}/extract_firmware.log" 2>&1
-from pathlib import Path
-import py7zr
-archive = Path(r"${archive}")
-out = Path(r"${FIRMWARE_DIR}")
-out.mkdir(parents=True, exist_ok=True)
-with py7zr.SevenZipFile(archive, mode='r') as z:
-    z.extractall(path=out)
-print('Extracted', archive)
-PY7Z
+  if [[ "${file_type}" == *"Zip archive"* ]] || [[ "${file_type}" == *"7-zip archive"* ]]; then
+    7z x -y "${archive}" -o"${FIRMWARE_DIR}" >"${LOG_DIR}/extract_firmware.log"
   else
     tar -xvf "${archive}" -C "${FIRMWARE_DIR}" >"${LOG_DIR}/extract_firmware.log"
   fi
@@ -276,7 +245,6 @@ build_flashable_zip() {
 }
 
 main() {
-  require_toolchain
   download_firmware
   extract_partition_tarballs
   convert_lz4_images

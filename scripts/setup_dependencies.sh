@@ -12,6 +12,7 @@ BASE_PACKAGES=(
   unzip
   lz4
   brotli
+  simg2img
   e2fsprogs
   android-sdk-libsparse-utils
   python3
@@ -31,39 +32,44 @@ package_available() {
   apt-cache show "$pkg" >/dev/null 2>&1
 }
 
-install_package() {
-  local pkg="$1"
-  if package_available "$pkg"; then
-    ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg"
-    return 0
+install_first_available() {
+  local installed=0
+  for pkg in "$@"; do
+    if package_available "$pkg"; then
+      echo "[deps] Installing package candidate: $pkg"
+      ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$pkg"
+      installed=1
+      break
+    fi
+  done
+
+  if [[ "$installed" -ne 1 ]]; then
+    echo "[deps] None of the package candidates are available: $*" >&2
+    return 1
   fi
-  return 1
 }
 
 echo "[deps] Updating apt indexes"
 ${SUDO} apt-get update -y
-${SUDO} add-apt-repository -y universe >/dev/null 2>&1 || true
-${SUDO} apt-get update -y
 
 echo "[deps] Installing base apt packages"
-for pkg in "${BASE_PACKAGES[@]}"; do
-  if ! install_package "$pkg"; then
-    echo "[deps] Failed to install required package: $pkg" >&2
-    exit 1
-  fi
-done
+${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${BASE_PACKAGES[@]}"
 
-# simg2img may be in different packages across images.
-if ! command -v simg2img >/dev/null 2>&1; then
-  install_package simg2img || true
-fi
-if ! command -v simg2img >/dev/null 2>&1; then
-  echo "[deps] simg2img binary is missing after install attempts" >&2
-  exit 1
+# 7z package naming differs across runners/distros. Try candidates in order.
+install_first_available p7zip-full 7zip
+
+# Optional codecs package might not exist on some mirrors; ignore failures.
+if package_available p7zip-rar; then
+  ${SUDO} DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends p7zip-rar || true
 fi
 
-echo "[deps] Installing python tools"
+if ! command -v 7z >/dev/null 2>&1 && command -v 7zz >/dev/null 2>&1; then
+  echo "[deps] Creating 7z shim from 7zz"
+  ${SUDO} ln -sf "$(command -v 7zz)" /usr/local/bin/7z
+fi
+
+echo "[deps] Upgrading pip and installing python tools"
 python3 -m pip install --upgrade pip
-python3 -m pip install --upgrade samloader py7zr
+python3 -m pip install --upgrade samloader
 
 echo "[deps] Dependency setup complete"

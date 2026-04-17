@@ -69,19 +69,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          echo "Using workflow commit: $GITHUB_SHA"
-          echo "Dependency script checksum:" && sha256sum scripts/setup_dependencies.sh
-          chmod +x scripts/setup_dependencies.sh
-          scripts/setup_dependencies.sh
-
-      - name: Verify toolchain
-        run: |
-          command -v lz4
-          command -v simg2img
-          command -v debugfs
-          command -v samloader
-          python3 -c "import py7zr; print(py7zr.__version__)"
-          python3 --version
+          sudo apt-get update
+          sudo apt-get install -y \
+            7zip-full \
+            zip \
+            unzip \
+            lz4 \
+            brotli \
+            simg2img \
+            e2fsprogs \
+            android-sdk-libsparse-utils \
+            python3 \
+            python3-pip \
+            xmlstarlet
+          python3 -m pip install --upgrade pip
+          python3 -m pip install samloader
 
       - name: Build ROM package
         run: |
