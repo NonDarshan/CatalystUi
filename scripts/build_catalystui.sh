@@ -69,26 +69,6 @@ log() {
   printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
 }
 
-require_toolchain() {
-  local missing=0
-  for tool in curl file tar 7z lz4 simg2img debugfs python3; do
-    if ! command -v "${tool}" >/dev/null 2>&1; then
-      echo "Missing required tool: ${tool}" >&2
-      missing=1
-    fi
-  done
-
-  if [[ "${FIRMWARE_SOURCE}" == "samloader" ]] && ! command -v samloader >/dev/null 2>&1; then
-    echo "Missing required tool for samloader mode: samloader" >&2
-    missing=1
-  fi
-
-  if [[ "${missing}" -ne 0 ]]; then
-    echo "Install dependencies first (run scripts/setup_dependencies.sh)." >&2
-    exit 1
-  fi
-}
-
 extract_firmware_archive() {
   local archive="$1"
   local file_type
@@ -265,7 +245,6 @@ build_flashable_zip() {
 }
 
 main() {
-  require_toolchain
   download_firmware
   extract_partition_tarballs
   convert_lz4_images
