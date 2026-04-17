@@ -1,0 +1,112 @@
+name: Build CatalystUi ROM
+
+on:
+  workflow_dispatch:
+    inputs:
+      firmware_source:
+        description: "Firmware source: samloader or url"
+        required: true
+        default: "samloader"
+        type: choice
+        options:
+          - samloader
+          - url
+      firmware_url:
+        description: "Direct firmware URL (required if firmware_source=url)"
+        required: false
+        type: string
+      samloader_model:
+        description: "Samsung model for samloader"
+        required: true
+        default: "SM-A146B"
+        type: string
+      samloader_region:
+        description: "Samsung CSC/region code for samloader"
+        required: true
+        default: "INS"
+        type: string
+      samloader_version:
+        description: "Firmware version for samloader (or 'latest')"
+        required: true
+        default: "latest"
+        type: string
+      rom_version:
+        description: "CatalystUi version label"
+        required: true
+        default: "v0.3-alpha"
+        type: string
+      apply_debloat:
+        description: "Apply debloat package removal list"
+        required: true
+        default: true
+        type: boolean
+      debloat_profile:
+        description: "Debloat profile: safe or heavy"
+        required: true
+        default: "heavy"
+        type: string
+      force_fast_charge:
+        description: "Inject fast charging enforcement script"
+        required: true
+        default: true
+        type: boolean
+      patch_vbmeta:
+        description: "Include vbmeta disable-verification helper"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      ROM_NAME: CatalystUi
+      DEVICE_CODENAME: a14x5g
+      DEVICE_MODEL: SM-A146B
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          echo "Using workflow commit: $GITHUB_SHA"
+          echo "Dependency script checksum:" && sha256sum scripts/setup_dependencies.sh
+          chmod +x scripts/setup_dependencies.sh
+          scripts/setup_dependencies.sh
+
+      - name: Verify toolchain
+        run: |
+          command -v lz4
+          command -v simg2img
+          command -v debugfs
+          command -v samloader
+          python3 -c "import py7zr; print(py7zr.__version__)"
+          python3 --version
+
+      - name: Build ROM package
+        run: |
+          chmod +x scripts/build_catalystui.sh
+          scripts/build_catalystui.sh \
+            --firmware-source "${{ github.event.inputs.firmware_source }}" \
+            --firmware-url "${{ github.event.inputs.firmware_url }}" \
+            --samloader-model "${{ github.event.inputs.samloader_model }}" \
+            --samloader-region "${{ github.event.inputs.samloader_region }}" \
+            --samloader-version "${{ github.event.inputs.samloader_version }}" \
+            --rom-version "${{ github.event.inputs.rom_version }}" \
+            --apply-debloat "${{ github.event.inputs.apply_debloat }}" \
+            --debloat-profile "${{ github.event.inputs.debloat_profile }}" \
+            --force-fast-charge "${{ github.event.inputs.force_fast_charge }}" \
+            --patch-vbmeta "${{ github.event.inputs.patch_vbmeta }}" \
+            --custom-wallpaper-dir "${{ github.workspace }}/custom_wallpapers"
+
+      - name: Upload flashable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: CatalystUi-${{ github.event.inputs.rom_version }}
+          path: out/*.zip
+
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: CatalystUi-logs-${{ github.run_number }}
+          path: out/logs/
