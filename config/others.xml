@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SamsungMobileFeature>
+    <Version>ED002</Version>
+    <Country>INS</Country>
+    <FeatureSet>
+        <CscFeature_Setting_SupportRealTimeNetworkSpeed>TRUE</CscFeature_Setting_SupportRealTimeNetworkSpeed>
+        <CscFeature_VoiceCall_ConfigRecording>RecordingAllowed</CscFeature_VoiceCall_ConfigRecording>
+        <CscFeature_Common_SupportAppLock>TRUE</CscFeature_Common_SupportAppLock>
+        <CscFeature_Framework_SupportDataUsageViewOnQuickPanel>TRUE</CscFeature_Framework_SupportDataUsageViewOnQuickPanel>
+        <CscFeature_Common_SupportZProjectFunctionInGlobal>TRUE</CscFeature_Common_SupportZProjectFunctionInGlobal>
+        <CscFeature_Common_EnableHighPerformanceMode>TRUE</CscFeature_Common_EnableHighPerformanceMode>
+    </FeatureSet>
+</SamsungMobileFeature>
