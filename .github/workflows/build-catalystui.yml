@@ -69,6 +69,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "Using workflow commit: $GITHUB_SHA"
+          echo "Dependency script checksum:" && sha256sum scripts/setup_dependencies.sh
           chmod +x scripts/setup_dependencies.sh
           scripts/setup_dependencies.sh
 
