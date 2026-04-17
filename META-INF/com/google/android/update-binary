@@ -1,0 +1,20 @@
+#!/sbin/sh
+OUTFD="$2"
+ZIPFILE="$3"
+
+ui_print() {
+  echo "ui_print $1" > /proc/self/fd/${OUTFD}
+  echo "ui_print" > /proc/self/fd/${OUTFD}
+}
+
+TMP_DIR="/tmp/catalystui"
+rm -rf "${TMP_DIR}"
+mkdir -p "${TMP_DIR}"
+
+ui_print "Preparing CatalystUi installer..."
+unzip -o "${ZIPFILE}" "install.sh" "patch_vbmeta.sh" "rom_payload/*" -d "${TMP_DIR}" >/dev/null
+chmod +x "${TMP_DIR}/install.sh"
+[ -f "${TMP_DIR}/patch_vbmeta.sh" ] && chmod +x "${TMP_DIR}/patch_vbmeta.sh"
+
+"${TMP_DIR}/install.sh"
+exit $?
