@@ -1,0 +1,79 @@
+name: Catalyst UI Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Target model"
+        required: true
+        default: "SM-A146B"
+      region:
+        description: "CSC region code"
+        required: true
+        default: "INS"
+      release_name:
+        description: "Output zip file name"
+        required: true
+        default: "CatalystUI_Release.zip"
+      asset_repo_url:
+        description: "Remote asset repository URL (zip/tar/git)"
+        required: true
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build-catalyst-ui:
+    runs-on: ubuntu-24.04
+    env:
+      DEVICE_MODEL: ${{ inputs.model }}
+      CSC_REGION: ${{ inputs.region }}
+      RELEASE_ZIP_NAME: ${{ inputs.release_name }}
+      ASSET_REPO_URL: ${{ inputs.asset_repo_url }}
+      WORK_DIR: ${{ github.workspace }}/work
+      TOOL_DIR: ${{ github.workspace }}/tools
+      OUT_DIR: ${{ github.workspace }}/out
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required repository content
+        run: |
+          set -euo pipefail
+          test -d "${GITHUB_WORKSPACE}/META-INF" || {
+            echo "ERROR: META-INF folder must exist in repository root" >&2
+            exit 1
+          }
+
+      - name: Run Phase 1 - Environment & Tools
+        run: bash scripts/1_download_tools.sh
+
+      - name: Run Phase 2 - Firmware Fetch & Unpack
+        run: bash scripts/2_unpack_firmware.sh
+
+      - name: Run Phase 3 - Debloat & De-Knox
+        run: bash scripts/3_debloat.sh
+
+      - name: Run Phase 4 - Catalyst Feature Injection
+        run: bash scripts/4_inject_features.sh
+
+      - name: Run Phase 5 - Repackaging
+        run: bash scripts/5_repack_twrp.sh
+
+      - name: Upload flashable release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CatalystUI-${{ inputs.model }}-${{ inputs.region }}
+          path: out/${{ inputs.release_name }}
+          if-no-files-found: error
+
+      - name: Create workflow summary
+        run: |
+          {
+            echo "## Catalyst UI Build Summary"
+            echo "- Device: ${DEVICE_MODEL}"
+            echo "- Region: ${CSC_REGION}"
+            echo "- Output: out/${RELEASE_ZIP_NAME}"
+          } >> "$GITHUB_STEP_SUMMARY"
