@@ -32,10 +32,20 @@ sudo apt-get install -y --no-install-recommends \
   xz-utils \
   zip
 
-# Build TopJohnWu samloader natively from the Rust registry for speed and consistency.
-if [[ ! -x "${TOOL_DIR}/bin/samloader" ]]; then
-  echo "📥 Compiling Rust samloader..."
-  cargo install samloader --root "${TOOL_DIR}"
+# Pull pre-compiled native Linux lpmake/lpdump from LineageOS 20.0.
+# Using 'git clone' bypasses all 404 and raw-link download corruptions.
+if [[ ! -x "${TOOL_DIR}/bin/lpmake" || ! -x "${TOOL_DIR}/bin/lpdump" ]]; then
+  echo "📥 Fetching pre-compiled tools directly from LineageOS 20.0 tree..."
+  git clone --depth=1 -b lineage-20.0 https://github.com/LineageOS/android_prebuilts_tools-lineage.git "${TOOL_DIR}/lineage-tools"
+  
+  mkdir -p "${TOOL_DIR}/bin"
+  cp "${TOOL_DIR}/lineage-tools/linux-x86/bin/lpmake" "${TOOL_DIR}/bin/lpmake"
+  cp "${TOOL_DIR}/lineage-tools/linux-x86/bin/lpdump" "${TOOL_DIR}/bin/lpdump"
+  
+  chmod +x "${TOOL_DIR}/bin/lpmake" "${TOOL_DIR}/bin/lpdump"
+  
+  # Clean up the 100MB+ repo to save workspace storage
+  rm -rf "${TOOL_DIR}/lineage-tools" 
 fi
 
 # Build lpmake/lpdump natively (do not rely on mirrors).
