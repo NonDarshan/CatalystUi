@@ -1,0 +1,30 @@
+# CatalystUi feature toggles
+ro.catalystui.name=CatalystUi
+ro.catalystui.feature.multiuser=true
+ro.catalystui.feature.callrecording=true
+ro.catalystui.feature.applock=true
+ro.catalystui.feature.networkspeed=true
+ro.catalystui.feature.altzlife=true
+ro.catalystui.feature.adaptivecolortone=true
+ro.catalystui.feature.outdoormode=true
+ro.catalystui.feature.dialoguebooster=true
+ro.catalystui.feature.unlimitedphotos=true
+ro.catalystui.feature.unlocked_galaxy_ai=true
+ro.catalystui.feature.force_90hz=true
+ro.catalystui.feature.disable_screenshot_detection=true
+ro.catalystui.feature.smartview_fix=true
+ro.catalystui.feature.knox_patch=true
+ro.catalystui.feature.high_end_animations=true
+ro.catalystui.feature.high_end_animations_toggle=true
+ro.catalystui.feature.live_blur=true
+ro.catalystui.feature.live_blur_toggle=true
+ro.catalystui.feature.force_fast_charging=true
+
+# Performance profile
+persist.sys.purgeable_assets=1
+persist.sys.scrollingcache=3
+persist.sys.disable_rescue=true
+persist.vendor.powerhint.enable=1
+persist.catalystui.performance.profile=balanced
+persist.catalystui.battery.profile=aggressive_doze
+persist.catalystui.debloat.profile=heavy
